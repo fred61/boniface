@@ -1,0 +1,286 @@
+Happy Nest Attendance
+=====================
+
+01.02.14
+
+Got it working on the site. Nice feature: go to next week when wiping. 
+
+Problem with the attendance SQL: if a kid had a session in the past, it won't show up as unassigned even if the leave date is changed. 
+This happens if parents take their children out but then change their minds. This needs manual intervention at the moment and just updating
+all session_registration and setting the valid_until date to null is not a good idea.
+
+Idea: I could set the leave_date when updating sessions to none. That would keep the data tidier...
+
+13.10.14
+
+  Reboot. It is as it is.
+  
+  Access: localhost/hn/attendance.php for the attendance table.
+  
+  Next project: CRUD for parent and child. 
+ 
+22.11.14
+  
+  I decide to use PDO for this. I see that PDO for MySQL is enabled in my PHP.INI already. Note that this may not be the case in production.
+  
+  PDO looks like a plain vanilla DAO implementation: there's a connection class, a statement class which appears to double as resultset.
+  
+  It is not a silver bullet: I still have to write the glue code between whatever objects I decide the app needs and the database columns
+  the data is stored in. Always been that way, always will be, no?
+  This is where I have a problem with PHP. I don't know enough about it to design a good data object. 
+  What do I want? I don't want the data access code in the data object class. Even though it's not OO in a way, data objects should be light weight
+  (really that's new-speak for they should be records). But it would be good if I could keep boilerplate code to a minimum. And really, all that the boilerplate
+  code needs to know is which table the object is persisted to and which object attribute goes into which table column. Forgot something: it needs to know the 
+  primary key of the table et voilà, I can write generic CRUD code. Or at least I can write the CUD part, anyway.
+  One approach which would make this easier is to keep column names in the data object. The object hasn't got attributes as such, it stores its data in a hashmap style 
+  structure, meaning it is accessible by column name. 
+  
+  What do I know. On closer inspection I find that PDO does provide a silver bullet, at least for reading: 
+  I can use the PDO::FETCH_OBJ fetch style.
+
+22.12.14
+
+  I want a PDO spike. Connect to HN Database and display one object.
+ 
+24.12.14
+
+  Got that, turns out to be very easy (as you'd expect). I'm not sure what style to use though: whether it
+  is better to go with the associative-array approach or the named properties. For querying the database
+  I don't think it makes much difference, but for updating it's a different story. Or is it? The least I'd
+  have to have is some info about the primary key of an object though. So you want an abstract class which 
+  lets you retrieve that at the very least.
+  
+  Turns out that the boundary between an array and an object in PHP is fluid. You can cast objects to array
+  and arrays to objects. As long as you stick to public properties everything is totally smooth.
+  
+  Traits: I can use those to provide default implementations of interfaces but not for polymorphism.
+  
+  This means it's easy to build insert and update statements from a data object.
+  
+  I'd quite like to have the ID column value returned after the insert. How do you do that? I guess that's
+  driver specific, so find the MySQL equivalient for "returning <column> into :bindParm" and you're good.
+  Turns out you don't even need that: PDO::lastInsertedId does what you want.   
+  
+  So CRUD should not be hard as long as we have a one-column PK. I have at least one table where this is
+  not true though. Need to investigate how to handle that. 
+
+26.12.14
+
+  How would you do join fetching? I don't want to have to fetch children of parents one at a time.
+  
+  You cound not fetch objects directly from a PDOStatement. You'd also have to have a prefix for the
+  column names of parent and child. 
+  
+  Google tells me that there's no support as such in PDO. I am not going to get into a "proper" ORM, that's total overkill for my application.
+  
+  AFAICS I'd have to build the select list myself using a prefix for each column (PDO::FETCH_ASSOC simply overwrites duplicate names).
+  It would seem that it would be easiest to just build an associative array of HappyParents and then read all children and do a fixup
+  on that data structure.
+  That raises a performance issue though. I clearly do not want to do that on every access. I need a variable at application level.
+  PHP has static variables, that ought to do it. 
+  What about concurrency issues? Clearly since I intend to update this data structure I need synchronisation.
+  
+  After trawling the internet for a while I find that synchronising access to shared data structures is not really the PHP way. It is meant 
+  to be share-nothing, meaning the theory is to interact directly with the database on every request.
+  I guess what you would do is to have a structure like the HappyParentMap in memory, access it on read, invalidate it on write. That's a 
+  write-through cache iirc. (Not quite: write-through means updating cache and backing store simultaneously as opposed to write-behind where
+  you only update the cache, waiting for the backing store to be updated at a later time.)
+ 
+ 27.12.14
+ 
+  This is going in the wrong direction. I'm not trying to write a super-scalable app here that scales across multiple servers. All I need is a simple
+  CRUD web app. I do want the data in memory though. Let's investigate APC.
+  That's not a good answer to the problem. There is no possibility to have separate caches for e.g. HappyParent and HappyChild, so I'd have to 
+  compose keys to be able to retrieve specific objects. Maybe an in memory DB is a better answer. 
+  
+24.01.15
+  
+  An in-memory DB would mean I basically do every update twice. There has got to be a better cache than APC.
+  There is another drawback: APC is not bundled with PHP, it is a PECL extension. I don't know how to get that onto the Happy Nest site if it isn't there
+  already.
+  How about just writing a table of Happy Parents which uses API which I can later refine?
+  
+25.01.15
+  
+  I got an simple list of parents out of the database. I could turn that into an HTML table etc etc. Before I do, I want to think about 
+  how I can show different lists for parents with children in playgroup, those with children in English Club and those with children 
+  in Happy Music.
+  I can do it via session_registration, but I would need to enter the relevant data then. I don't have an easy way to do that for phonics
+  and music at the moment. It might be easier to add the relevant booleans to the parent table and just maintain those for the time being.
+  
+  So far so good. Next step is to combine the child table into what I have along the lines mentioned above.
+  
+08.02.15
+  
+  Got that to work eventually, it even sorts correctly now. Minor details to be added in this iteration: mailto link would be nice, table 
+  doesn't look great because empty cells aren't displayed with border. 
+  
+  Target of next iteration: details page with link. General Problem: how do you handle navigation? Actual problem: would be nice to have
+  link from this page to assign_sessions page, but how do I go back to correct page?  
+  
+16.2.15
+  
+  Got the site to work. The problem was that the DB was out of sync. I gotta be more careful about how I update the DB locally. 
+  I also need a way to keep my local stuff in sync with the site. Maybe BeyondCompare will be useful.
+  
+01.03.15
+  
+  There is a problem when I change registrations. What I attempted was to move Zofia (child ID 37) from Tue / Wed to Tue / Thu. I am not sure exactly what 
+  I did and when I did it, but I ended up with the following entries in the DB 
+    37  3   2014-12-15  2015-01-25
+    37  4   2014-12-15  2014-12-14
+    37  3   2014-08-18  2015-01-25
+    37  2   2014-08-18  NULL
+    37  4   2015-01-26  NULL
+    37  4   2015-02-23  NULL
+  I don't have the time right now, but this needs reproducing and debugging.
+  
+07.03.15
+  
+    37  3   2014-12-15  2015-01-25  session ID 3 is Wed
+    37  4   2014-12-15  2014-12-14  4 = Thu
+    37  3   2014-08-18  2015-01-25
+    37  2   2014-08-18  NULL        2 = Tue
+    37  4   2015-01-26  NULL
+    37  4   2015-02-23  NULL
+  
+  My theory is that when the form was posted, it failed to recognise the session on Thu and added it again.
+  
+  Well one way this whole thing fails is if I go back in time and edit again. If the record starting 02-23 was inserted first, 
+  then the system would not "know" about it and re-insert the session on 01-26.
+  
+  Could solve this problem by having not just "true" for the registered field in the session structure but the date when the registration starts.
+  Also load future registrations. If registration starts in future, just update the record accordingly. Might need similar logic for stopping reg.
+  
+02.04.15
+  
+  Had a crack at inserting new parents. Need to rethink inheritance hierarchy. HappyParent cannot be an Entity, it needs to be a pojo. I need a
+  separate class which takes a HappyParent and does Entity things to it.
+  
+04.04.15
+  
+  Inserting new parents works. I need to invest some time in the user interface. I want the parent table to scroll and I want menu / button 
+  bars at the top and the bottom of the page.
+  
+26.04.15
+  
+  I want to find out how to move the database from the production site to my dev environment.
+  That's easy enough: export the DB in production, options are straightforward. Then drop the database in dev, run the SQL created
+  in the first step, voilà.
+  
+  I want to be able to enter all the data we collect on the reg form and have it in the DB. 
+  People usually go on the waiting list first. I need to come up with a sequence of states which people go through before 
+  they end up in the playgroup.
+  How about "enquired, registered, placed" where placed means we promised them a place? Then when we finalise the placement the child
+  gets a start date and that's when they have definitely left the waiting list.
+  Question is whether the "placed" state is necessary. I think not.
+  Would be cool if I could capture the days of the week people are interested in. 
+  NB it's not the parents who are on the waiting list, it's the children. 
+  Waiting list could be a session type. 
+  
+29.4.15
+  
+  I have a new DB design that works better with music, waiting list etc. I need to redo the attendance though.
+  The methods I need for this don't fit well into HappyParentFactory - they concern sessions and children, not parents.
+  Also don't see clearly what data structure is supposed to look like. The SQL query for this is easier or was with 
+  the old structure. I have a notion to only have valid_from on the table in the new design and calculate valid_until 
+  when I load the data but I'm not at all sure that's going to work. 
+  Actually it should. I have to have a list of sessions for every child valid from, valid to etc, done and dusted.
+  
+30.4.
+  
+  It just occured to me that maybe I should go even further down the record road. As it is, I have a parent has a list of children, 
+  but if you do that, then logically a child should have a reference to a parent and that's you in trouble: var_dump probably just stopped
+  working because there is a circular reference in your object structure. But really, that's a problem of var_dump, should not stop me from 
+  doing the object structure correctly.
+  Yeah but no but yeah but no but...
+  If I include the parent reference in the child object, my EntityAdapter just stopped working. 
+  
+1.5.15
+  
+  What I'm looking for is a sort of decorator for the objects which are transported between the app and the database. 
+  I would like the decorator to be sort of transparent, meaning that the original properties of the transport object should
+  not be obscured. If I had that, the parent decorator could add the child list, the child decorator would add the parent 
+  reference, the valid_to property and the session list. I know this can be done in PHP.
+
+  That does work. However, my general approach appears not to be proper PHP. Static variables do not keep their values between
+  PHP requests, only the stuff in the Session does. That means I either pay the price for building my object structure every time,
+  or I lose it, or I use something like APC to cache it. I have a hunch that APC is available on the production site - apparently Drupal
+  makes heavy use of it and Drupal works. That's nice but I don't have it locally. That's not a reason not to use it though. 
+  I don't need it though. I can lose the object structure in a caching sense and just get the objects that I actually need from the DB.
+  If I see bad performance (unlikely) I can then add caching. Premature optimisation and all that.
+  
+ 2.5.15
+ 
+  So far so good. Problem I have now is how to edit the children part. I was almost certain that there is such a thing as a control
+  array in HTML forms like there was in VB, but I can't find how to do it except by appending an index to the control name by hand.
+  Also, adding children would need JavaScript I suppose, or shall we say it would be easiest if I used JS for this.      
+ 
+ 3.5.15
+ 
+   how do I get the children into the happyParent object? The request has controls like child_nickname0, where 0 is 
+   the child array index. I need to allow for the child array in the request to have more elements than the child 
+   array, eventually that's the way I will be adding children.
+   and what about sessions? 
+   There will be radio buttons for waiting list, playgroup, english and music.
+   Let's start with inserting one child and then take it from there. 
+ 
+ 9.5.15
+ 
+  I can create and update parents and children. I can also insert session occurences. I'm not sure how to handle the valid_from 
+  attribute in session occurences yet. I could have a GUI element showing it and if you leave that alone it's an update, if not
+  then it's an insert. The problem with that is that session occurences do not have an id. Their primary key is really child_id, session_id
+  and valid_from. My entity adapter cannot handle that. I could make it so it can handle it or I could give the session occurence table
+  an artifical primary key. The purist in me doesn't like the artificial PK.
+  I don't think it would be that difficult, either.
+  Turns out that the update part was a figment of my imagination. I can read existing data but not write it, apparently.
+  
+ 10.5.15
+ 
+  Update works for the straightforward cases (HappyParent and HappyChild). SessionOccurence isn't done yet and there is a problem with it.
+  I can use the IDs of HP and HC to decide whether to insert or update and have the DB generate the ID, but this obviously doesn't work
+  for SessionOccurences. I cannot see a solution other than having a boolean on the decorated object (not the DTO).
+  Updating a SessionOccurence _is_ a real use case. If there is a mistake with the week days, you want that changed, not have the correct data
+  added with an artificial valid_from date. 
+  My data structure doesn't work for multiple occurences of the same session for the same child.
+ 
+ 15.5.15
+ 
+  Think I have it, except for resetting sessions for a child. GUI logic there could be to clear weekdays for a session if a valid_from date is 
+  set.
+  The logging is not very satisfying as it is. I rely on a class having a logger named logger in the traits, that is not good. I don't know
+  how to do it better at the moment though.
+  
+  The reset works also, but requires a valid from date on the session that is being reset. This would make the use case where a child
+  moves off the waiting list clumsier that it needs to be.
+ 
+ 16.5.15
+ 
+  Had an idea: instead of having a separate assign sessions page, I could link to the edit parents page from the attendance page. I will need
+  to deal with the asOf logic somehow though. I could set the valid_from text boxes accordingly, but then I need to change the logic for
+  resetting sessions.
+  Turns out that that is not enough. I must implement logic in the page which reacts on clicks on the session check boxes and sets the 
+  valid from date.
+  
+  I also need to figure out how to keep track of the back link. One obvious way is in the session scope. That's probably my best bet. The only
+  alternative I can think of is http_referrer, but according to PHP doc, that is unreliable.
+  
+  Found a potential problem: It seems that when I add a parent / child, the session insert doesn't work correctly. Investigate later. 
+
+17.5.15
+
+  Turns out all that that was is that in case of inserts I was not dealing with multiple sessions per child yet. Easy to fix.
+  
+  It's getting there. There is one gap I am aware of: at the moment, you need to assign days for a child on the waiting list. That's
+  not ideal, it should not be necessary to do that. If a child is on the waiting list without days then it should show up in the 
+  "unassigned" column in the attendance table.
+ 
+ 19.5.15
+ 
+  I want to fine tune the look of the edit page a bit.
+  
+  I want to make it so the attendance table is ordered by session type first. This may entail changing my data structure to having separate
+  arrays for each day of the week, so that I can sort them more easily.
+  
+  So I got there in the end, lost a bit of time because I was using uasort when I should've been using usort, not sure what the difference
+  actually is.   
