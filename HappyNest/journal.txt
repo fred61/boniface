@@ -301,3 +301,8 @@ Idea: I could set the leave_date when updating sessions to none. That would keep
  24.5.15
   
   Went with the event handler in the check boxes. This is worth a commit I suppose.
+  
+  It's not very stylish at the moment, this will have to wait though. I found an article with lots of icon sets: http://www.creativebloq.com/web-design/free-icon-sets-10134829
+  
+  Next step is to handle siblings.
+  Done it. 

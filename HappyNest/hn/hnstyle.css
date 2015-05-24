@@ -9,9 +9,16 @@ body
 	margin:70px;
 }
 
+.header2 
+{
+	font-weight: bold;
+	font-size: 150%;
+	padding: 10px 0;
+}
+
 textarea
 {
-  font-size:75%;
+  font-size:inherit;
 	font-family:verdana,arial,'sans serif';
 }
 
@@ -28,7 +35,7 @@ table#attendance
 
 table#attendance th
 {
-	padding-bottom: 50px;
+	padding-bottom: 5mm;
 	border: 2px solid black;
 }
 
