@@ -148,13 +148,16 @@
 					$requestKey= $requestKeyPrefix . "_" . $key;
 				}
 				
-				if (!is_null($controlIndex)) {
-					$requestKey= $requestKey . "_" . $controlIndex;
-				}
 	
 				if (array_key_exists($requestKey, $_REQUEST)) {
-					self::$logger->debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey] . "]");
-					$actualObject->{$key}= $_REQUEST[$requestKey];
+					
+					if (is_null($controlIndex)) {
+						self::$logger->debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey] . "]");
+						$actualObject->{$key}= $_REQUEST[$requestKey];
+					} else {
+						self::$logger->debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey][$controlIndex] . "]");
+						$actualObject->{$key}= $_REQUEST[$requestKey][$controlIndex];
+					}
 				}
 			}
 		}

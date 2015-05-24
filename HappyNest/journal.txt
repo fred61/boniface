@@ -282,5 +282,22 @@ Idea: I could set the leave_date when updating sessions to none. That would keep
   I want to make it so the attendance table is ordered by session type first. This may entail changing my data structure to having separate
   arrays for each day of the week, so that I can sort them more easily.
   
-  So I got there in the end, lost a bit of time because I was using uasort when I should've been using usort, not sure what the difference
-  actually is.   
+  So I got there in the end, lost a bit of time because I was using uasort when I should've been using usort.
+ 
+ 20.5.15
+ 
+  Next topics: adding siblings, calendar should not require a roundtrip to the server.
+ 
+ 21.5.15
+ 
+  I thought I had a great idea for adding siblings: it turns out that if you append [] to a control name and if you have several controls
+  of the same name in your form, PHP will give you an array with all the values in $_POST. In theory this is neat because it means that I can 
+  have one <div> with all of the HappyChild controls and then I can just add another copy of that <div> without interfering with the 
+  control names at all. However, because for submission for checkboxes is the single most braindead thing in computer science, it doesn't work.
+  I have thought of a workaround: I can add an event handler to the checkboxes which builds the days in another control which I then use when 
+  processing the request. It will need more work though, because I have to build the eventhandler and I have to redo the event processing.
+  Alternatively, I can abandon the array idea at least for now and adjust the control names when I copy the <div> for children.
+ 
+ 24.5.15
+  
+  Went with the event handler in the check boxes. This is worth a commit I suppose.

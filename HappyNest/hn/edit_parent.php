@@ -6,7 +6,7 @@
 
 	$logger= new Logger();
 	
-	function makeWeekdayColumns($childIndex, $session, $asOf, $happyChild)
+	function makeWeekdayColumns($session, $asOf, $happyChild)
 	{
 		global $logger;
 		$result= "";
@@ -21,114 +21,60 @@
 			$sessionOccurence= null;
 		}
 		
+		$shadowCtrlValue= "";
 		
 		for($i= 1; $i <= 5; $i++) {
 			$result= $result . "<td>";
 		
-			if (isset($sessionOccurence) && $sessionOccurence->isOnWeekday($i)) {
-				$ctrlValue= 'checked';
-			} else {
-				$ctrlValue= '';
-			}
-			
-			if ($session->isAvailableOn($i)) {
-				$result= $result . '<input type=checkbox onclick="setValidFrom(\'' . SessionDataTranslator::makeValidFromControlName($childIndex, $session->id); 
-				$result= $result . '\')"  name="' . SessionDataTranslator::makeCheckboxControlName($childIndex, $session->id, $i) . '" ' . $ctrlValue . '>';
-			} else {
+			if (!$session->isAvailableOn($i)) {
 				$result= $result . "&nbsp;";
+				$shadowCtrlValue.= "n";
+			} else {
+				if (isset($sessionOccurence) && $sessionOccurence->isOnWeekday($i)) {
+					$ctrlValue= 'checked';
+					$shadowCtrlValue.= "y";
+				} else {
+					$ctrlValue= '';
+					$shadowCtrlValue.= "n";
+				}
+			
+				$result= $result . '<input type="checkbox" name="" value="' . $i . '" ' . $ctrlValue . ">";
 			}
 			$result= $result . "</td>";
 		}
+		
+		$result= $result . '<td><input type="hidden" name="session_days[' . $session->id . '][]" value="' . $shadowCtrlValue . '"></td>'; 
 				
 		return $result;
 	}
 	
-	function makeValidFromInput($childIndex, $sessionId, $asOf, $child)
+	function makeValidFromInput($session, $asOf, $child)
 	{
 		$sessions= $child->getSessions($asOf);
-		if (isset($sessions) && isset($sessions[$sessionId])) {
-			$sessionValidFrom= $sessions[$sessionId]->valid_from;
+		if (isset($sessions) && isset($sessions[$session->id])) {
+			$sessionValidFrom= $sessions[$session->id]->valid_from;
 		} else {
 			$sessionValidFrom= "";
 		}
-		$controlName= SessionDataTranslator::makeValidFromControlName($childIndex, $sessionId);
 		
-		$result= "<input type=\"text\" name=\"$controlName\"  id=\"$controlName\" value=\"$sessionValidFrom\">";
+		$result= '<input type="text" name="session_valid_from[' . $session->id . '][]" value="' . $sessionValidFrom . '">';
 
 		return $result;
 	}
 	
-	class SessionDataTranslator
+	function convertSessionDays($sessionDaysYN)
 	{
-		const CB_CONTROL_NAME_PATTERN= "child_%d_session_%d_day_%d";
-// 		const VF_CONTROL_NAME_PATTERN= ""child_${childIndex}_session_${sessionId}_valid_from";"
-		const VF_CONTROL_NAME_PATTERN= "child_%d_session_%d_valid_from";
-				
-		static function makeCheckboxControlName($childIndex, $sessionId, $sessionDay)
-		{
-			return sprintf(self::CB_CONTROL_NAME_PATTERN, $childIndex, $sessionId, $sessionDay);
-		}
+		$result= "";
 		
-		static function makeValidFromControlName($childIndex, $sessionId)
-		{
-			return sprintf(self::VF_CONTROL_NAME_PATTERN, $childIndex, $sessionId);
-		}
-		
-		static function getCheckboxIndices($controlName) {
-			$result= array();
-			
-			$parsedValues= sscanf($controlName, self::CB_CONTROL_NAME_PATTERN, $result['childIdx'], $result['sessionId'], $result['sessionDay']);
-			
-			if ($parsedValues != 3) {
-				return NULL;
-			} else {
-				return $result;
+		for($i= 0; $i < strlen($sessionDaysYN); $i++) {
+			if ($sessionDaysYN[$i] == 'y') {
+				$result= $result . ($i+1) . ","; 
 			}
 		}
-	}
-	
-	function sessionDataFromPost()
-	{
-		global $sessions;
-		$result= array_fill(0, $_POST['childCount'], null);
-		
-		foreach($_POST as $requestKey => $value) {
-			$sessionIndices= SessionDataTranslator::getCheckboxIndices($requestKey);
-			
-			if ($sessionIndices != null) {
-				$childIdx= $sessionIndices['childIdx'];
-				$sessionId= $sessionIndices['sessionId'];
-				$sessionDay= $sessionIndices['sessionDay'];
-				
-				if (is_null($result[$childIdx])) {
-					$result[$childIdx]= array();
-				}
-				if (isset($result[$childIdx][$sessionId])) {
-					$result[$childIdx][$sessionId]['days']= $result[$childIdx][$sessionId]['days'] . "," . $sessionDay;
-				} else {
-					$result[$childIdx][$sessionId] = array(
-							'validFrom' => $_POST[SessionDataTranslator::makeValidFromControlName($childIdx, $sessionId)]
-						 ,'days'      => $sessionDay);
-				}
-			}
-		}
-		
-		for($i= 0; $i < $_POST['childCount']; $i++) {
-			foreach($sessions as $session) {
-				$sessionId= $session->id;
-				$vf= $_POST["child_${i}_session_${sessionId}_valid_from"];
-					
-				if ($vf <> '' && !isset($result[$i][$session->id])) {
-					$result[$i][$sessionId] = array(
-							'validFrom' => $vf
-							,'days'     => "");
-				}
-			}
-		}
-		
+		$result= rtrim($result, ",");
 		
 		return $result;
-	}
+	}	
 	
 	$logger->infoDump("Request", $_REQUEST);
 	
@@ -143,15 +89,26 @@
 		$logger->debug("copy from request");
 		ModelFactory::copyFromRequest($happyParent);
 		
-		$sessionData= sessionDataFromPost();
-		
-		$logger->debugDump("session data from request", $sessionData);
-		
-		for($i= 0; $i < $_POST['childCount']; $i++) {
+		for($i= 0; $i < count($_POST['child_name']); $i++) {
 			if (array_key_exists($i, $happyParent->children)) {
 				ModelFactory::copyFromRequest($happyParent->children[$i], "child", $i);
+
+				// session data is an array, indexed by session ID.
+				// elements are object style arrays: keys are validFrom and days.
 				
-				$happyParent->children[$i]->applySessionData($sessionData[$i], $asOf);
+				$sessionData= array();
+				foreach($sessions as $session) {
+					$vf= $_POST['session_valid_from'][$session->id][$i];
+					$sd= convertSessionDays($_POST['session_days'][$session->id][$i]);
+					if ($vf != '' || $sd != '') {
+						$sessionData[$session->id]['validFrom']= $vf;
+						$sessionData[$session->id]['days']= $sd;
+					} 
+				}
+				
+				$logger->alwaysDump("session data", $sessionData);
+				$happyParent->children[$i]->applySessionData($sessionData, $asOf);
+				
 			} 
 			// else a new HappyChild was created by JS on the page so make a new HappyChild and copy
 		}
@@ -161,7 +118,8 @@
 			ModelFactory::putParent($happyParent);
 		}
 		
- 		SiteController::back();
+		SiteController::back();
+		
 	}
 ?>
 <!DOCTYPE html>
@@ -170,17 +128,61 @@
     <title>Happy Nest Parents</title>
     <link rel="stylesheet" type="text/css" href="hnstyle.css">
     <script type="text/javascript">
+    	window.onload = function() {
+
+				for (var i= 0; i < document.forms.length; i++) {
+					var form= document.forms[i];
+					console.log("form: " + form.name);
+
+					for (var j= 0; j < form.elements.length; j++) {
+						var element= form.elements[j];
+
+						if (element.type == 'checkbox') {
+							// find related controls: shadowControl stores checkBox states, validFromControl is self-explanatory
+							var grandParent= element.parentElement.parentElement;
+							// sanity check - this should be a table row
+							if (grandParent.nodeName == "TR") {
+								var inputs= grandParent.getElementsByTagName("input");
+								for (k= 0; k < inputs.length; k++) {
+									if (inputs[k].type == "hidden") {
+										element.shadowControl= inputs[k];
+										element.addEventListener("click", checkBoxHandler);
+									}
+									if (inputs[k].type == "text" && inputs[k].name.indexOf('session_valid_from') == 0) {
+										element.validFromControl= inputs[k];
+										element.addEventListener("click", setValidFrom);
+									}
+								}
+							}
+						}
+					}
+				}
+    	};
+
+    	function checkBoxHandler()
+    	{
+        	var values= this.shadowControl.value.split("");
+        	var index= this.value - 1;
+
+        	if (this.checked) {
+            	values[index]= "y";
+        	} else {
+            	values[index]= "n";
+        	}
+
+        	this.shadowControl.value= values.join("");
+			}
+    	
     	function setValidFrom(targetId)
     	{
-        	console.exception("set valid from");
-        	var targetElement= document.getElementById(targetId);
         	var sourceElement= document.getElementById("asOf");
 
-        	targetElement.value= sourceElement.value;
+        	this.validFromControl.value= sourceElement.value;
 			}
     </script>
   </head>
   <body>
+  	<form name="here_is_another_one"></form>
   	<form method="post">
   		<div>
   			<h2>Parent</h2>
@@ -212,8 +214,8 @@
 	 		</div>
 	 		<div>
   			<h2>Children</h2>
-  			<input type="hidden" name="childCount" value="<?= count($happyParent->children) ?>">
   			<?php foreach($happyParent->children as $index=>$child) { $logger->debugDump("child", $child); ?>
+  				<input type="hidden" name="child_id[]" value="<?= $child->id?>">
 			    <table class="edit_children">
 			    	<tr>
 			    		<th>&nbsp;</th>
@@ -224,39 +226,40 @@
 			    		<th>W</th>
 			    		<th>T</th>
 			    		<th>F</th>
+			    		<th></th>		<!-- empty column for shadow control -->		
 			    		<th>Starting from</th>
 			    	</tr>
 				  	<tr>
 				  		<td>Name:</td>
-				  		<td><input type="text" name="child_name_<?= $index?>" value="<?= $child->name?>"></td>
+				  		<td><input type="text" name="child_name[]" value="<?= $child->name?>"></td>
 				  		<td class="padded"><?= $sessions[1]->name ?></td>
-				  		<?= makeWeekdayColumns($index, $sessions[1], $asOf, $child)?>
-				  		<td><?= makeValidFromInput($index, 1, $asOf, $child)?></td>
+				  		<?= makeWeekdayColumns($sessions[1], $asOf, $child)?>
+				  		<td><?= makeValidFromInput($sessions[1], $asOf, $child)?></td>
 				  	</tr>
 				  	<tr>
 				  		<td>Date of Birth:</td>
-				  		<td><input type="date" name="child_date_of_birth_<?= $index?>" value="<?= $child->date_of_birth?>"></td>
+				  		<td><input type="date" name="child_date_of_birth[]" value="<?= $child->date_of_birth?>"></td>
 				  		<td class="padded"><?= $sessions[2]->name ?></td>
-				  		<?= makeWeekdayColumns($index, $sessions[2], $asOf, $child)?>
-				  		<td><?= makeValidFromInput($index, 2, $asOf, $child)?></td>
+				  		<?= makeWeekdayColumns($sessions[2], $asOf, $child)?>
+				  		<td><?= makeValidFromInput($sessions[2], $asOf, $child)?></td>
 				  	</tr>
 				  	<tr>
 				  		<td>Nickname:</td>
-				  		<td><input type="text" name="child_nickname_<?= $index?>" value="<?= $child->nickname?>"></td>
+				  		<td><input type="text" name="child_nickname[]" value="<?= $child->nickname?>"></td>
 				  		<td class="padded"><?= $sessions[3]->name ?></td>
-				  		<?= makeWeekdayColumns($index, $sessions[3], $asOf, $child)?>
-				  		<td><?= makeValidFromInput($index, 3, $asOf, $child)?></td>
+				  		<?= makeWeekdayColumns($sessions[3], $asOf, $child)?>
+				  		<td><?= makeValidFromInput($sessions[3], $asOf, $child)?></td>
 				  	</tr>
 				  	<tr>
 				  		<td>Start Date:</td>
-				  		<td><input type="text" name="child_start_date_<?= $index?>" value="<?= $child->start_date?>"></td>
+				  		<td><input type="text" name="child_start_date[]" value="<?= $child->start_date?>"></td>
 				  		<td class="padded"><?= $sessions[4]->name ?></td>
-				  		<?= makeWeekdayColumns($index, $sessions[4], $asOf, $child)?>
-				  		<td><?= makeValidFromInput($index, 4, $asOf, $child)?></td>
+				  		<?= makeWeekdayColumns($sessions[4], $asOf, $child)?>
+				  		<td><?= makeValidFromInput($sessions[4], $asOf, $child)?></td>
 				  	</tr>
 				  	<tr>
 				  		<td>Leave Date:</td>
-				  		<td><input type="text" name="child_leave_date_<?= $index?>" value="<?= $child->leave_date?>"></td>
+				  		<td><input type="text" name="child_leave_date[]" value="<?= $child->leave_date?>"></td>
 				  		<td colspan="7">&nbsp;</td>
 				  		</tr>
 			  		</table>

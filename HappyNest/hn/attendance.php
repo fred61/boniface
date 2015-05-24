@@ -5,14 +5,6 @@
   require_once 'control/site_controller.php';
   require_once 'control/attendance_controller.php';
   
-  /*
-   * note: the attendanceTable is an array with 2 elements: header and body.
-   * the header has columns for the days of the week and the counts for each day.
-   * the body also has columns for each day. Each cell contains the name of a child who has
-   * a session on that day in a link to a page which allows the sessions for that child
-   * to be edited.
-   */
-  
   class AttendanceView {
   	public $allSessions;
   	private $attendanceTable;
