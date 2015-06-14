@@ -226,21 +226,49 @@
   SiteController::mark();
   
   $asOf= AttendanceController::getAsOf();
-  $calAsOf= SiteController::getCalAsOf();
-  
-  $calendar= new Calendar($asOf, $calAsOf);
 
   $view= new AttendanceView();
   $view->initialise($asOf);
 ?>
-<html>
+<html lang="en" >
   <head>
-    <title>Happy Nest Attendance</title>
+  	<meta charset="utf-8">
+  	<title>Happy Nest Attendance</title>
     <link rel="stylesheet" type="text/css" href="hnstyle.css">
-  </head>
+  	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular.min.js"></script>
+  	<script src="lib/calendar.js"></script>
+  	</head>
   <body>
-    <nav id="calendar">
-      <?= $calendar->make_html(); ?>
+    <nav id="calendar" ng-app="calendarApp" ng-controller="CalendarCtrl">
+    	<div>
+    		<table>
+    			<tr>
+    				<td class="clickable" ng-click="prevYear()">&lt;&lt;<td>
+    				<td class="clickable"ng-click="prevMonth()">&lt;<td>
+    				<td  style="width: 110px;text-align:center;">
+    					{{ asOf.toLocaleString('en-GB', {year: 'numeric', month:'long'}) }}
+    				<td>
+    				<td  class="clickable" ng-click="nextMonth()">&gt;<td>
+    				<td  class="clickable" ng-click="nextYear()">&gt;&gt;<td>
+    			</tr>
+    		</table>
+	  		<table id="calendar">
+    			<tr>
+    				<th>M</th>
+    				<th>T</th>
+    				<th>W</th>
+    				<th>T</th>
+    				<th>F</th>
+    				<th>S</th>
+    				<th>S</th>
+    			</tr>
+	  		<tr ng-repeat="row in datesTable()">
+	  				<td  class="clickable" ng-class="{asOfDateCell : pageAsOf.sameDay(cell), todayDateCell : today.sameDay(cell) }" ng-repeat="cell in row" ng-click="setAsOf(cell)">
+	  					{{ cell.getDate() }}
+	  				</td>
+	  			</tr>
+	  		</table>
+	  	</div>
     </nav>
     <nav id="sessionTypes">
     	<form method="post">

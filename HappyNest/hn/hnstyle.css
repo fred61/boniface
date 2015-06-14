@@ -165,3 +165,25 @@ nav#calendar a
 	text-decoration: none;
 	color: black;
 }
+
+nav#calendar td
+{
+	border: 1px solid white;
+	text-align: center;
+}
+
+nav#calendar td.clickable
+{
+  cursor: pointer;
+}
+
+nav#calendar td.todayDateCell
+{
+  border: 1px solid red;
+}
+
+nav#calendar td.asOfDateCell
+{
+  border: 1px solid black;
+}
+
