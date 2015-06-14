@@ -125,7 +125,7 @@
 			foreach (ModelFactory::getAllParents() as $happyParent)
 			{
 				foreach($happyParent->children as $happyChild) {
-					$sessions= $happyChild->getSessions($this->asOf);
+					$sessions= $happyChild->getCurrentSessions($this->asOf);
 					//$logger->debugDump("sessions as of " . $this->asOf->format('Y-m-d'), $sessions);
 						
 					if (is_null($sessions) || count($sessions) == 0) {

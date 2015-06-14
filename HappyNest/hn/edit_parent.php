@@ -11,7 +11,7 @@
 		global $logger;
 		$result= "";
 		
-		$sessions= $happyChild->getSessions($asOf);
+		$sessions= $happyChild->getNearestSessions($asOf);
 		$logger->debugDump("sessions as of  " . $asOf->format('Y-m-d'), $sessions);
 		
 		if (isset($sessions) && isset($sessions[$session->id]))
@@ -50,7 +50,7 @@
 	
 	function makeValidFromInput($session, $asOf, $child)
 	{
-		$sessions= $child->getSessions($asOf);
+		$sessions= $child->getNearestSessions($asOf);
 		if (isset($sessions) && isset($sessions[$session->id])) {
 			$sessionValidFrom= $sessions[$session->id]->valid_from;
 		} else {
@@ -223,7 +223,6 @@
     </script>
   </head>
   <body>
-  	<form name="here_is_another_one"></form>
   	<form method="post">
   		<div>
   			<div class="header2">Parent</div>

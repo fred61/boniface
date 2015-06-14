@@ -306,3 +306,12 @@ Idea: I could set the leave_date when updating sessions to none. That would keep
   
   Next step is to handle siblings.
   Done it. 
+  
+  14.6.15
+  
+    Changed the calendar navigation to use angular.js. The next step down that route would be to implement a REST interface to parents
+    and children in PHP, then use this interface to reimplement a section of the site with Angular. It will probably be easier to do this
+    for the edit part rather than the attendance part. 
+    There is a weakness in the implementation at the moment: if a child has sessions in the future but not at the time where you look at
+    the site, they don't show up.
+    

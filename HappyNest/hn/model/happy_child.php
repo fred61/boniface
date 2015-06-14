@@ -67,13 +67,31 @@ class HappyChild  implements DecoratedObject {
 		array_push($this->sessions[$sessionId], $so);
 	}
 	
-	function getSessions($asOf)
+	function getCurrentSessions($asOf)
 	{
 		$result= array();
 		
 		foreach($this->sessions as $sessionOccurences)
 		{
 			$so= $this->getCurrentOccurence($sessionOccurences, $asOf);
+			if (!is_null($so)) {
+				$result[$so->session_id]= $so;
+			}
+		}
+		
+		return $result;
+	}
+	
+	function getNearestSessions($asOf)
+	{
+		$result= array();
+		
+		foreach($this->sessions as $sessionOccurences)
+		{
+			$so= $this->getCurrentOccurence($sessionOccurences, $asOf);
+			if (is_null($so) && isset($sessionOccurences[0])) {
+				$so= $sessionOccurences[0];
+			}
 			if (!is_null($so)) {
 				$result[$so->session_id]= $so;
 			}
