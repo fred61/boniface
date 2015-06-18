@@ -36,7 +36,9 @@ ExtendedDate.prototype.sameDay= function(otherDate)
 	return result;
 	//TODO test otherDate for methods being present and do something reasonable when they're not.
 }
-
+//TODO this is not the way to do a delegate object. There has to be a way to use Object.create and 
+//	prototypes etc to get to a point where I only have to have the extra methods and everything
+//  else is delegated to Date.
 
 angular.module('calendarApp', [])
 	.controller('CalendarCtrl', function($scope, $window) {
@@ -115,5 +117,10 @@ angular.module('calendarApp', [])
 	$scope.nextMonth= function() {
 		$scope.asOf.setMonth($scope.asOf.getMonth() + 1);
 	}
+	
+	$scope.bookMarkDates= [
+	                       	{date: new Date("2015-08-17"), text: "First day after summer holidays (Playgroup)"}
+	                       ,{date: new Date("2015-09-07"), text: "First day after summer holidays (English / Music)"}
+	                       ]
 	
 });

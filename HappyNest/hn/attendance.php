@@ -262,12 +262,16 @@
     				<th>S</th>
     				<th>S</th>
     			</tr>
-	  		<tr ng-repeat="row in datesTable()">
+	  			<tr ng-repeat="row in datesTable()">
 	  				<td  class="clickable" ng-class="{asOfDateCell : pageAsOf.sameDay(cell), todayDateCell : today.sameDay(cell) }" ng-repeat="cell in row" ng-click="setAsOf(cell)">
 	  					{{ cell.getDate() }}
 	  				</td>
 	  			</tr>
 	  		</table>
+	  	</div>
+	  	<div ng-repeat="bm in bookMarkDates" style="width: 200px;">
+	  		<hr>
+	  		<a ng-click="setAsOf(bm.date)" href="">{{bm.text}}</a>
 	  	</div>
     </nav>
     <nav id="sessionTypes">
