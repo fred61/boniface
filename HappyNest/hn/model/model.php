@@ -27,7 +27,9 @@
 	
 				$dsn= "mysql:host=" . config::$host . ";dbname=" . config::$db;
 	
-				self::$dbh= new PDO($dsn, config::$user, config::$pwd);
+				self::$dbh= new PDO($dsn, config::$user, config::$pwd, array(
+ 			   PDO::ATTR_PERSISTENT => true
+				));
 	
 				if (!self::$dbh) {
 					throw new Exception("could not connect to database");
@@ -127,6 +129,23 @@
 				self::loadAllSessions();
 			}
 			return self::$allSessions;
+		}
+		
+		static function getBookmarkDates()
+		{
+			$result= array();
+				
+			$sth= self::$dbh->query("select * from bookmark_date", PDO::FETCH_ASSOC);
+			
+			if (!$sth) {
+				throw new Exception('failed to get bookmark dates from DB: ' . self::$dbh->errorInfo()[2]);
+			} else {
+				foreach($sth as $row) {
+					array_push($result, $row);
+				}
+			}
+			
+			return $result;
 		}
 					
 		static function copyFromRequest(&$object, $requestKeyPrefix=NULL, $controlIndex=NULL)

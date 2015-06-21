@@ -27,8 +27,6 @@ ExtendedDate.prototype.truncateTime= function() {
 }
 ExtendedDate.prototype.sameDay= function(otherDate)
 {
-	console.log("sameDay %o, %o", this, otherDate);
-	
 	var result= this.delegate.getDate() == otherDate.delegate.getDate()
 		&& this.delegate.getMonth() == otherDate.delegate.getMonth()
 		&& this.delegate.getFullYear() == otherDate.delegate.getFullYear();
@@ -41,7 +39,7 @@ ExtendedDate.prototype.sameDay= function(otherDate)
 //  else is delegated to Date.
 
 angular.module('calendarApp', [])
-	.controller('CalendarCtrl', function($scope, $window) {
+	.controller('CalendarCtrl', function($scope, $window, $http) {
 
 	//$window.location.search holds the query part of the URL including the ? at the start
 	//convert it into an object with properties and values:
@@ -118,9 +116,22 @@ angular.module('calendarApp', [])
 		$scope.asOf.setMonth($scope.asOf.getMonth() + 1);
 	}
 	
-	$scope.bookMarkDates= [
-	                       	{date: new Date("2015-08-17"), text: "First day after summer holidays (Playgroup)"}
-	                       ,{date: new Date("2015-09-07"), text: "First day after summer holidays (English / Music)"}
-	                       ]
+//	$scope.bookMarkDates= [
+//	                       	{date: new Date("2015-08-17"), text: "First day after summer holidays (Playgroup)"}
+//	                       ,{date: new Date("2015-09-07"), text: "First day after summer holidays (English / Music)"}
+//	                       ]
+	
+	var elapsed= performance.now();
+	
+	$http.get('api/v1/bookmarkDates/').success(function(data) {
+		console.log("data: %o", data);
+		$scope.bookMarkDates= [];
+		for(var i= 0; i < data.length; i++) {
+			console.log("%o%", data[i].date);
+			$scope.bookMarkDates.push({date: new Date(Date.parse(data[i].date)), text: data[i].text});
+		}
+		elapsed= performance.now() - elapsed;
+		console.log("elapsed: %d", elapsed);
+	});
 	
 });

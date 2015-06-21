@@ -7,9 +7,11 @@ function flushLog()
 {
 	global $buffer;
 	
-	echo '<script type="text/javascript">';
-	echo $buffer;
-	echo '</script>';
+	if (strlen($buffer) > 0) {
+		echo '<script type="text/javascript">';
+		echo $buffer;
+		echo '</script>';
+	}
 }
 
 
