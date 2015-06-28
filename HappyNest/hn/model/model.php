@@ -92,7 +92,7 @@
 	
 		static function putParent(&$happyParent)
 		{
-			self::$logger->always("putting parent");
+			self::$logger->info("putting parent");
 			
 			self::$dbh->beginTransaction();
 			
@@ -101,10 +101,10 @@
 				if ($happyParent instanceof HappyParent) {
 					
 					if (is_numeric($happyParent->id)) {
-						self::$logger->always("updating parent");
+						self::$logger->info("updating parent");
 						self::updateParent($happyParent);
 					} else {
-						self::$logger->always("inserting parent");
+						self::$logger->info("inserting parent");
 						self::insertParent($happyParent);
 					}
 				}
@@ -210,13 +210,13 @@
 		
 		private static function updateParent($happyParent)
 		{
-			self::$logger->always("updating parent");
+			self::$logger->info("updating parent");
 			
 			$adapter= new HappyParentEntityAdapter($happyParent);
 			$adapter->update(self::$dbh);
 			
 			foreach($happyParent->children as &$child) {
-				self::$logger->always("updating child");
+				self::$logger->info("updating child");
 					
 				$child->parent_id= $happyParent->id;
 				self::$logger->debugDump("child", $child);

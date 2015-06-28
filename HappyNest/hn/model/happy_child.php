@@ -37,7 +37,10 @@ class HappyChild  implements DecoratedObject {
 				self::$logger->debug("update of session $sessionId");
 				//let's find out if all we need to do is change the days of the occurence
 				$so= $this->getCurrentOccurence($this->sessions[$sessionId], $asOf);
-				self::$logger->debugDump("current occurence", $so);
+				if (is_null($so)) {
+					$so= $this->getNearestFutureOccurence($this->sessions[$sessionId], $asOf);
+				}
+				self::$logger->debugDump("current occurence as of " . $asOf->format('Y-m-d'), $so);
 				
 				if ($session['validFrom'] == $so->valid_from) {
 					self::$logger->debug('valid from matches, it\'s an update');
@@ -89,16 +92,17 @@ class HappyChild  implements DecoratedObject {
 		foreach($this->sessions as $sessionOccurences)
 		{
 			$so= $this->getCurrentOccurence($sessionOccurences, $asOf);
-			if (is_null($so) && isset($sessionOccurences[0])) {
-				$so= $sessionOccurences[0];
-			}
+			if (is_null($so)) {
+				$so= $this->getNearestFutureOccurence($sessionOccurences, $asOf);
+			} 
+			
 			if (!is_null($so)) {
 				$result[$so->session_id]= $so;
 			}
 		}
 		
 		return $result;
-	}
+			}
 	
 	private function getCurrentOccurence($sessionOccurences, $asOf)
 	{
@@ -109,6 +113,23 @@ class HappyChild  implements DecoratedObject {
 			$vt= new DateTime($so->valid_to);
 		
 			if ((is_null($so->valid_from) || $vf <= $asOf) && (is_null($so->valid_to) || $vt >= $asOf))
+			{
+				$result= &$so;
+			}
+		}
+		
+		return $result;
+	}
+
+	private function getNearestFutureOccurence($sessionOccurences, $asOf)
+	{
+		$result= null;
+		
+		foreach($sessionOccurences as &$so) {
+			$vf= new DateTime($so->valid_from);
+			$vt= new DateTime($so->valid_to);
+		
+			if ((is_null($so->valid_from) || $vf > $asOf) && (is_null($so->valid_to) || $vt >= $asOf))
 			{
 				$result= &$so;
 			}

@@ -25,7 +25,7 @@ class Logger {
 	static $levels= array(
 			'edit_parent'  => self::INFO
 		 ,'dump'         => self::INFO
-		 ,'attendance'   => self::DEBUG
+		 ,'attendance'   => self::INFO
 		 ,'HappyChild'   => self::INFO
 		 ,'ModelFactory' => self::INFO
 	);

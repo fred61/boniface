@@ -79,6 +79,7 @@
 	$logger->infoDump("Request", $_REQUEST);
 	
 	$asOf= SiteController::getAsOf();
+	$logger->info("asOf from site controller: " . $asOf->format('Y-m-d'));
 	
 	ModelFactory::initialise();
 	$sessions= ModelFactory::getAllSessions();
@@ -111,7 +112,7 @@
 				} 
 			}
 			
-			$logger->alwaysDump("session data", $sessionData);
+			$logger->infoDump("applying session data as of " . $asOf->format('Y-m-d'), $sessionData);
 			$happyParent->children[$i]->applySessionData($sessionData, $asOf);
 				
 		}
@@ -122,6 +123,7 @@
 		}
 		
 		SiteController::back();
+		//FIXME this is wrong, I need to make this conditional on not having had any exceptions.
 		
 	}
 ?>
@@ -223,11 +225,11 @@
     </script>
   </head>
   <body>
-  	<form method="post">
+	<input type="hidden" name="asOf" id="asOf" value="<?= $asOf->format('Y-m-d')?>">
+  <form method="post">
   		<div>
   			<div class="header2">Parent</div>
   			<input type="hidden" name="id" value="<?= $happyParent->id?>">
-  			<input type="hidden" name="asOf" id="asOf" value="<?= $asOf->format('Y-m-d')?>">
 	  		<table>
 	  			<tr>
 	  				<td>Name:</td><td><input type="text" name="name" value="<?= $happyParent->name?>" size=60></td>

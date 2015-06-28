@@ -38,7 +38,7 @@
 		{
 			$sql= $this->getUpdateStatement();
 				
-			self::$logger->always("update statement: $sql");
+			self::$logger->info("update statement: $sql");
 				
 			$stmt= $pdo->prepare($sql);
 			$this->bindInsertValues($stmt);
@@ -62,7 +62,7 @@
 			foreach ($this->getActualObject() as $key => $value) {
 				if ($this->isPrimaryKey($key)) {
 					$whereClause= "${whereClause}${key} = :${key} and ";
-					self::$logger->always("where: $whereClause");
+					self::$logger->info("where: $whereClause");
 				} else {
 					$selectList= "${selectList}${key} = :${key}, ";
 				}
@@ -70,7 +70,7 @@
 			
 			$selectList= substr($selectList, 0, strlen($selectList) - 2);
 			$whereClause= substr($whereClause, 0, strlen($whereClause) - 5);
-			self::$logger->always("where: $whereClause");
+			self::$logger->info("where: $whereClause");
 				
 			return "UPDATE " . $this->tableName . " SET " . $selectList . " WHERE " . $whereClause; 
 		}
