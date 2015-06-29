@@ -23,10 +23,10 @@ class Logger {
 	const ALWAYS= 4;
 
 	static $levels= array(
-			'edit_parent'  => self::INFO
+			'edit_parent'  => self::DEBUG
 		 ,'dump'         => self::INFO
-		 ,'attendance'   => self::INFO
-		 ,'HappyChild'   => self::INFO
+		 ,'attendance'   => self::DEBUG
+		 ,'HappyChild'   => self::DEBUG
 		 ,'ModelFactory' => self::INFO
 	);
 	

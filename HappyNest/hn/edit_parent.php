@@ -304,9 +304,17 @@
 						  	<tr>
 						  		<td>Leave Date:</td>
 						  		<td><input type="text" name="child_leave_date[]" value="<?= $child->leave_date?>"></td>
-						  		<td colspan="7">&nbsp;</td>
-						  		</tr>
-					  		</table>
+						  		<td class="padded"><?= $sessions[5]->name ?></td>
+						  		<?= makeWeekdayColumns($sessions[5], $asOf, $child)?>
+						  		<td><?= makeValidFromInput($sessions[5], $asOf, $child)?></td>
+						  	</tr>
+						  	<tr>
+						  		<td colspan="2">&nbsp;</td>
+						  		<td class="padded"><?= $sessions[6]->name ?></td>
+						  		<?= makeWeekdayColumns($sessions[6], $asOf, $child)?>
+						  		<td><?= makeValidFromInput($sessions[6], $asOf, $child)?></td>
+						  	</tr>
+						  	</table>
 		 				<?php }?>
 		 			</div>
 	 			</div>
