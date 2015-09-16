@@ -1,18 +1,20 @@
 <?php
 	require_once 'lib/lib.php';
-	require_once 'lib/log.php';
 	require_once 'model/model.php';
 	require_once 'control/site_controller.php';
-
-	$logger= new Logger();
 	
+	require_once 'lib/log4php/Logger.php';		//TODO not nice that I have to go to log4php directly
+	Logger::configure('conf/log4php.xml');
+	$logger= Logger::getLogger(basename($_SERVER['PHP_SELF'], '.php'));
+		
 	function makeWeekdayColumns($session, $asOf, $happyChild)
 	{
 		global $logger;
 		$result= "";
 		
 		$sessions= $happyChild->getNearestSessions($asOf);
-		$logger->debugDump("sessions as of  " . $asOf->format('Y-m-d'), $sessions);
+		$logger->debug("sessions as of  " . $asOf->format('Y-m-d'));
+		$logger->debug($sessions);
 		
 		if (isset($sessions) && isset($sessions[$session->id]))
 		{
@@ -76,7 +78,8 @@
 		return $result;
 	}	
 	
-	$logger->infoDump("Request", $_REQUEST);
+	$logger->info("Request");
+	$logger->info($_REQUEST);
 	
 	$asOf= SiteController::getAsOf();
 	$logger->info("asOf from site controller: " . $asOf->format('Y-m-d'));
@@ -112,11 +115,14 @@
 				} 
 			}
 			
-			$logger->infoDump("applying session data as of " . $asOf->format('Y-m-d'), $sessionData);
+			$logger->info("applying session data as of " . $asOf->format('Y-m-d'));
+			$logger->info($sessionData);
+			
 			$happyParent->children[$i]->applySessionData($sessionData, $asOf);
 				
 		}
-		$logger->debugDump("happy parent after processing", $happyParent);
+		$logger->debug("happy parent after processing");
+		$logger->debug($happyParent);
 		
 		if ($_POST['action'] == "Save") {
 			ModelFactory::putParent($happyParent);
@@ -258,7 +264,7 @@
   			<div class="header2">Children<input style="padding-left: 3mm;" type="image" src="img/b_insrow.png" onclick="return addChild();"></div>
   			<div id="childContainer">
   				<div>
-		  			<?php foreach($happyParent->children as $index=>$child) { $logger->debugDump("child", $child); ?>
+		  			<?php foreach($happyParent->children as $index=>$child) { $logger->debug("child"); $logger->debug($child); ?>
 		  				<input type="hidden" name="child_id[]" value="<?= $child->id?>">
 					    <table class="edit_children">
 					    	<tr>

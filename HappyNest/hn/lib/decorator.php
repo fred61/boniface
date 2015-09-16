@@ -1,5 +1,7 @@
 <?php
-	interface DecoratedObject
+require_once 'lib/log.php';
+
+interface DecoratedObject
 	{
 		function unwrap();
 		
@@ -8,6 +10,8 @@
 	}
 	
 	trait DecoratorTrait {
+		use LoggerTrait;
+				
 		private $plainObject;
 	
 		public function unwrap()
@@ -16,20 +20,20 @@
 		}
 		
 		public function __get($name) {
-			self::$logger->debug("getting $name");
+			self::debug("getting $name");
 			
 // 			if ($name == "plainObject") {
 // 				return $this->plainObject;
 // 			} else {
 //TODO cleanup
 				$a= (array)$this->plainObject;
-				self::$logger->debug("got " . $a[$name]);
+				self::debug("got " . $a[$name]);
 				return $a[$name];
 // 			}
 		}
 		
 		public function __set($name, $value) {
-			self::$logger->debug("setting $name to $value");
+			self::debug("setting $name to $value");
 			$this->plainObject->{$name}= $value;
 		}
 	}

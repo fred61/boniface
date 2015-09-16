@@ -314,4 +314,76 @@ Idea: I could set the leave_date when updating sessions to none. That would keep
     for the edit part rather than the attendance part. 
     There is a weakness in the implementation at the moment: if a child has sessions in the future but not at the time where you look at
     the site, they don't show up.
+   
+ 19.7.15
+ 
+    I built a REST service in PHP. At the moment it only does GET requests and I only have one sample entity I invented: bookmarkdates, which
+    are dates you can jump to in the attendance table.
+    I am not yet happy with the error handling though. The sample code I started out from appears to append diagnostics to the status code. My 
+    experiments so far indicate that this is pointless, only the status code makes it out of the service. This doesn't happen on the client side, 
+    even the response headers show nothing.
+    I can return the exception, which I receive in the data parameter of the error callback. I don't know exactly what to do with that. I suppose
+    I would have to put it somewhere in my model in angular and then show it, but it all seems to be roll your own.
+    Maybe there is a better way to handle exceptions when you build a proper single page app with angular.
+    Another approach would be to not provide diagnostics on the client side, but log exceptions on the server side. That would mean I'd have to 
+    revisit my logging implementation.
+    Speaking of which: the log to console in Javascript idea is nice but has pitfalls: it is impossible to log in a service that way. Let's
+    investigate how I can write to a logfile from PHP.
+    There is a file access API in PHP. It is low-level, looks similar to what I remember from C. 
+    Well duh. There is an Apache log4php project, let's investigate that. This is exactly what I want. 
+    It works very well. I do have to do a big-bang conversion, because I have used the name Logger for my Logger thing.
+    I still have the problem of how to log from traits. As it is, I require a class to have a static logger variable if it 
+    wants to use the EntityTrait (e.g.). That's not great.
+
+ 09.09.15
+ 
+    I think the above bit about requiring each class to have a static logger variable is wrong. I can put the logger part into its own trait 
+    and use that trait in classes. 
+    It's not quite as I'd like it: if you have A extends B, both use the logger trait, then apparently the logger used is always the one from
+    B, even in the methods of A. I don't quite understand why, but it makes a difference whether the log methods are protected or private. If
+    they're private, the behavior is correct: in A the logger used is A, in B it's B.
+    Next thing to try is trait composition: I'd expect it to work, and I'd expect the logger to be used to depend on the class.
+    That seems to work, so next step now is to take this from dump.php and implement it in the rest of the code.
+
+ 10.09.15
     
+    I forgot about the dump methods I had in the old logger stuff. I'm not sure what to do about them.
+    I could add the relevant methods to the LoggerTrait. 
+    IIRC I used different renderers in log4j at one point. The VarDumpRenderer I already have and appear to have configured doesn't work though. 
+    Will have to read up on log4php config to see if I can get this to work. 
+ 
+ 13.09.15
+ 
+    I obviously never tested logging objects. Turns out the default is good enough, I don't need any custom renderers at all. 
+    I certainly don't need the VarDumpRenderer, because var_dump ends up in the page output, I don't want that.
+    json encoding an object seems to took good at least for "small" objects - not sure how that would look for e.g. a HappyParent.
+    
+    The trait approach has a serious drawback: I can only have the logging methods once, so if trait A uses logging I can't use the trait
+    and logging in a class which uses A. The conflict resolution methods would require me to know that A uses logging and to resolve conflicts
+    for each logging method, which is bad. 
+    
+    I can have a logger variable in a trait but trying to initialise it is a compile error. That's why I have to have the getLogger and logging 
+    methods in the trait.
+    
+    I don't see a way around that. If I use a trait which uses logging, I simply have to know that and not use logging again.
+    
+    And here's another one I hadn't considered: how do I log from static methods? I'd have to make the whole logging stuff static I guess.
+    Don't see any way around that.
+    
+    I want to investigate an approach where the logger trait has the static variable and requires each user to set it by defining an abstract
+    method.
+    Don't see the improvement.  
+    
+  16.09.15
+      
+    This is the URL to locally smoketest the bookmarkDates service: http://localhost/HappyNest/hn/api/v1/bookmarkDates/
+    There is huge potential for improvement here: I'd like to look into the unit testing / system testing stuff you get when getting
+    started with Angular.
+    
+    Having problems with paths in PHP: I use paths relative to the root of the site (HappyNest\hn in the project) for includes etc. 
+    This works as long as the script I execute lives in the there. For services, that's different. I could use PHP's include path
+    to work around this, but that doesn't work for the log4php config, plus it means that there's a env setting required for the system to
+    work, which I don't like. The best solution I have come up with to date is to chdir to the site root at the start of service implementations.
+    
+    Playing with the log4php config I note that there is also a logger hierarchy in log4php. I don't see how I could use that, since there is
+    no natural structure in PHP classes like there is in Java.  

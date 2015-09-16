@@ -2,14 +2,10 @@
 	require_once 'happy_parent.php';
 	require_once 'happy_child.php';
 	require_once 'session.php';
+	require_once 'lib/log.php';
 	
 	class ModelFactory {
-		static $logger;
-	
-		static function initLogger()
-		{
-			self::$logger= new Logger(__CLASS__);
-		}
+		use LoggerTrait;
 		
 		static $loadAlways= true;
 	
@@ -20,10 +16,10 @@
 		static $allSessions;
 	
 		static function initialise() {
-			self::$logger->debug('initialising');
+			self::debug('initialising');
 				
 			if (! isset(self::$dbh)) {
-				self::$logger->debug('connecting');
+				self::debug('connecting');
 	
 				$dsn= "mysql:host=" . config::$host . ";dbname=" . config::$db;
 	
@@ -92,7 +88,7 @@
 	
 		static function putParent(&$happyParent)
 		{
-			self::$logger->info("putting parent");
+			self::info("putting parent");
 			
 			self::$dbh->beginTransaction();
 			
@@ -101,10 +97,10 @@
 				if ($happyParent instanceof HappyParent) {
 					
 					if (is_numeric($happyParent->id)) {
-						self::$logger->info("updating parent");
+						self::info("updating parent");
 						self::updateParent($happyParent);
 					} else {
-						self::$logger->info("inserting parent");
+						self::info("inserting parent");
 						self::insertParent($happyParent);
 					}
 				}
@@ -152,10 +148,10 @@
 		{
 			if ($object instanceof DecoratedObject)
 			{
-				self::$logger->debug("decorated object, unwrapping");
+				self::debug("decorated object, unwrapping");
 				$actualObject= $object->unwrap();
 			} else {
-				self::$logger->debug("non-decorated object, using as is");
+				self::debug("non-decorated object, using as is");
 				$actualObject= $object;
 			}
 			
@@ -171,10 +167,10 @@
 				if (array_key_exists($requestKey, $_REQUEST)) {
 					
 					if (is_null($controlIndex)) {
-						self::$logger->debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey] . "]");
+						self::debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey] . "]");
 						$actualObject->{$key}= $_REQUEST[$requestKey];
 					} else {
-						self::$logger->debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey][$controlIndex] . "]");
+						self::debug("request key $requestKey exists, value is [" . $_REQUEST[$requestKey][$controlIndex] . "]");
 						$actualObject->{$key}= $_REQUEST[$requestKey][$controlIndex];
 					}
 				}
@@ -189,10 +185,10 @@
 			$happyParent->id= self::$dbh->lastInsertId();
 			
 			foreach($happyParent->children as &$child) {
-				self::$logger->debug("inserting child");
+				self::debug("inserting child");
 			
 				$child->parent_id= $happyParent->id;
-				self::$logger->debugDump("child", $child);
+				self::debugDump("child", $child);
 			
 				$adapter= new HappyChildEntityAdapter($child);
 				$adapter->insert(self::$dbh);
@@ -200,7 +196,7 @@
 					
 				foreach($child->sessions as $session) {
 					foreach($session as $so) {
-						self::$logger->debug("inserting session ");
+						self::debug("inserting session ");
 						$adapter= new SessionOccurenceEntityAdapter($so);
 						$adapter->insert(self::$dbh);
 					}
@@ -210,16 +206,16 @@
 		
 		private static function updateParent($happyParent)
 		{
-			self::$logger->info("updating parent");
+			self::info("updating parent");
 			
 			$adapter= new HappyParentEntityAdapter($happyParent);
 			$adapter->update(self::$dbh);
 			
 			foreach($happyParent->children as &$child) {
-				self::$logger->info("updating child");
+				self::info("updating child");
 					
 				$child->parent_id= $happyParent->id;
-				self::$logger->debugDump("child", $child);
+				self::debugDump("child", $child);
 					
 				$adapter= new HappyChildEntityAdapter($child);
 				
@@ -231,9 +227,9 @@
 				}
 				
 				foreach($child->sessions as $session) {
-					self::$logger->debug("updating sessions");
+					self::debug("updating sessions");
 					foreach($session as $so) {
-						self::$logger->debugDump("session occurence", $so);
+						self::debugDump("session occurence", $so);
 						$adapter= new SessionOccurenceEntityAdapter($so);
 						
 						if ($so->isNew()) {
@@ -272,17 +268,17 @@
 				}
 			}
 				
-			self::$logger->debug('loading');
+			self::debug('loading');
 				
 			$result= array();
 				
-			self::$logger->debug('got ' . sizeof($resultSet) . ' parents');
+			self::debug('got ' . sizeof($resultSet) . ' parents');
 				
 			foreach($resultSet as $dto) {
 				$result[$dto->id]= new HappyParent($dto);
 			}
 			
-			self::$logger->debug('have ' . count(array_keys($result)) . ' keys in result');
+			self::debug('have ' . count(array_keys($result)) . ' keys in result');
 
 			$placeHolders = implode(',', array_fill(0, count(array_keys($result)), '?'));
 						
@@ -344,7 +340,7 @@
 // 			$children= $sth->fetchAll();
 // 			$sth->closeCursor();
 				
-// 			self::$logger->debugDump($children);
+// 			self::debugDump($children);
 				
 // 			foreach($children as $dto) {
 // 				$happyChild= new HappyChild($dto);
@@ -374,5 +370,4 @@
 			}
 		}
 	}
-	ModelFactory::initLogger();
 ?>	

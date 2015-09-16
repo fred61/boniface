@@ -10,6 +10,8 @@
 	}
 	
 	trait EntityTrait {
+		use LoggerTrait;
+		
 		private $primaryKey;
 		private $tableName;
 		private $autoPK;
@@ -26,7 +28,7 @@
 		{
 			$sql= $this->getInsertStatement();
 			
-			self::$logger->debug("insert statement: $sql");
+			self::debug("insert statement: $sql");
 			
 			$stmt= $pdo->prepare($sql);
 			$this->bindInsertValues($stmt);
@@ -38,7 +40,7 @@
 		{
 			$sql= $this->getUpdateStatement();
 				
-			self::$logger->info("update statement: $sql");
+			self::info("update statement: $sql");
 				
 			$stmt= $pdo->prepare($sql);
 			$this->bindInsertValues($stmt);
@@ -49,8 +51,8 @@
 		
 		private function getInsertStatement()
 		{
-			self::$logger->debug("getting insert statment");
-			self::$logger->debugDump("entity adapter", $this);
+			self::debug("getting insert statment");
+			self::debugDump("entity adapter", $this);
 			return "INSERT INTO " . $this->tableName . "(" . $this->getColumnList() . ") VALUES (" . $this->getColumnList(":") . ")";  
 		}
 		
@@ -62,7 +64,7 @@
 			foreach ($this->getActualObject() as $key => $value) {
 				if ($this->isPrimaryKey($key)) {
 					$whereClause= "${whereClause}${key} = :${key} and ";
-					self::$logger->info("where: $whereClause");
+					self::info("where: $whereClause");
 				} else {
 					$selectList= "${selectList}${key} = :${key}, ";
 				}
@@ -70,7 +72,7 @@
 			
 			$selectList= substr($selectList, 0, strlen($selectList) - 2);
 			$whereClause= substr($whereClause, 0, strlen($whereClause) - 5);
-			self::$logger->info("where: $whereClause");
+			self::info("where: $whereClause");
 				
 			return "UPDATE " . $this->tableName . " SET " . $selectList . " WHERE " . $whereClause; 
 		}
@@ -92,7 +94,7 @@
 		{
 			foreach ($this->getActualObject() as $key => $value) {
 				if (!$this->isPrimaryKey($key) || !$this->autoPK) {
-						self::$logger->debug("binding $key to $value");
+						self::debug("binding $key to $value");
 						$stmt->bindValue(":$key", $value);
 				}
 			}

@@ -1,6 +1,9 @@
 <?php
-class Service {
+require_once 'lib/log.php';
 
+class Service {
+	use LoggerTrait;
+	
 	private $handler;
 
 	public function __construct($request, $handler)
@@ -19,7 +22,8 @@ class Service {
 			$result= $this->{$method}();
 		} catch (Exception $e) {
 			$status= $this->exceptionStatus($e);
-			//that's nice but possibly pointless. I did not see this arrive on the client side. I don't think
+			$result= $e;
+			//TODO that's nice but possibly pointless. I did not see this arrive on the client side. I don't think
 			// the text in the status makes it anywhere: once the PHP engine (or wawa) sees the 500 status, it
 			// appears to be it: it appends "Server Error" and that is that.
 		}
@@ -46,14 +50,16 @@ class Service {
 
 	private function get()
 	{
-		logMsg("getting it");
+		self::debug("getting it");
 		$requestData= $this->_cleanInputs ( $_GET );
 		
 		$responseData= $this->handler->get($requestData);
-		dump($responseData);
+		self::debugDump("", $responseData);
 		
 		return json_encode ( $responseData );
 	}
+	
+	//TODO extend for post, put and delete
 
 	private function _cleanInputs($data) {
 		$clean_input = Array ();

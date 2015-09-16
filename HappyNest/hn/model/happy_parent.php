@@ -6,13 +6,6 @@
 	
 	class HappyParent implements DecoratedObject {
 		use DecoratorTrait;
-		static $logger;
-		
-		static function init()
-		{
-			self::$logger= new Logger(__CLASS__);
-		}
-		
 		
 		public $children= array();
 			
@@ -34,12 +27,11 @@
 			
 			$result->children[]= HappyChild::fromRequest();
 			
-			self::$logger->debugDump("HappyParent from request", $result);
+			$this->debugDump("HappyParent from request", $result);
 				
 			return $result;
 		}
 	}
-	HappyParent::init();
 	
 	class HappyParentDTO {
 		public $id;
@@ -55,14 +47,6 @@
 	class HappyParentEntityAdapter implements Entity {
 		use EntityTrait;
 		
-			static $logger;
-		
-		static function init()
-		{
-			self::$logger= new Logger(__CLASS__);
-		}
-		
-		
 		public $adaptee;
 
 		function __construct($adaptee)
@@ -74,5 +58,4 @@
 		}
 		
 	}
-	HappyParentEntityAdapter::init();
 ?>

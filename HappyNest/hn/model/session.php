@@ -1,17 +1,13 @@
 <?php
+require_once 'lib/log.php';
+
 class Session implements DecoratedObject {
 	use DecoratorTrait;
-	static $logger;
 	
 	const PLAYGROUP = 1;
 	const ENGLISH = 2;
 	const MUSIC = 3;
 	const WAITING_LIST = 4;
-	
-	static function init()
-	{
-		self::$logger= new Logger(__CLASS__);
-	}
 	
 	function __construct($dto)
 	{
@@ -20,7 +16,7 @@ class Session implements DecoratedObject {
 	
 	function isAvailableOn($weekDay)
 	{
-		self::$logger->debug("check availability of $weekDay against " . $this->plainObject->available_on);
+		$this->debug("check availability of $weekDay against " . $this->plainObject->available_on);
 		
 		$result= strpos($this->plainObject->available_on, "$weekDay");
 		
@@ -31,7 +27,6 @@ class Session implements DecoratedObject {
 		}
 	}
 }
-Session::init();
 
 class SessionDTO {
 	public $id;
@@ -41,13 +36,6 @@ class SessionDTO {
 
 class SessionOccurence implements DecoratedObject {
 	use DecoratorTrait;
-	static $logger;
-	
-	static function init()
-	{
-		self::$logger= new Logger(__CLASS__);
-	}
-	
 	
 	public $session;
 	public $valid_to;
@@ -91,7 +79,6 @@ class SessionOccurence implements DecoratedObject {
 	}
 	
 }
-SessionOccurence::init();
 
 class SessionOccurenceDTO {
 	public $child_id;
@@ -103,14 +90,6 @@ class SessionOccurenceDTO {
 class SessionOccurenceEntityAdapter implements Entity {
 	use EntityTrait;
 
-	static $logger;
-	
-	static function init()
-	{
-		self::$logger= new Logger(__CLASS__);
-	}
-		
-		
 	public $adaptee;
 
 	function __construct($adaptee) {
@@ -121,7 +100,6 @@ class SessionOccurenceEntityAdapter implements Entity {
 		$this->adaptee= $adaptee;
 	}
 }
-SessionOccurenceEntityAdapter::init();
 
 //TODO primary key name and table name are static really. I'm not sure how to 
 // set / use these with traits though. 

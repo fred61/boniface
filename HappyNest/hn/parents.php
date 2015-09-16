@@ -3,8 +3,13 @@
 	require_once 'lib/lib.php';
 	require_once 'control/site_controller.php';
 	
+	require_once 'lib/log4php/Logger.php';		//TODO not nice that I have to go to log4php directly
+	Logger::configure('conf/log4php.xml');
+	$logger= Logger::getLogger(basename($_SERVER['PHP_SELF'], '.php'));
+	
 	SiteController::mark();
-	$logger= new Logger();
+	
+	$logger->info('hello from log4php');
 	
 	if (array_key_exists('action', $_REQUEST)) {
 		if ($_REQUEST['action'] == "New") {

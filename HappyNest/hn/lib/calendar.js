@@ -123,15 +123,25 @@ angular.module('calendarApp', [])
 	
 	var elapsed= performance.now();
 	
-	$http.get('api/v1/bookmarkDates/').success(function(data) {
-		console.log("data: %o", data);
-		$scope.bookMarkDates= [];
-		for(var i= 0; i < data.length; i++) {
-			console.log("%o%", data[i].date);
-			$scope.bookMarkDates.push({date: new Date(Date.parse(data[i].date)), text: data[i].text});
-		}
-		elapsed= performance.now() - elapsed;
-		console.log("elapsed: %d", elapsed);
-	});
-	
+	$http.get('api/v1/bookmarkDates/')
+		.success(function(data, status, headers, config) {
+			console.log("data: %o", data);
+			console.log("status: %o", status);
+			console.log("headers: %o", headers);
+			console.log("config: %o", config);
+			
+			$scope.bookMarkDates= [];
+			for(var i= 0; i < data.length; i++) {
+				console.log("%o%", data[i].date);
+				$scope.bookMarkDates.push({date: new Date(Date.parse(data[i].date)), text: data[i].text});
+			}
+			elapsed= performance.now() - elapsed;
+			console.log("elapsed: %d", elapsed);
+		})
+		.error(function(data, status, headers, config){
+			console.log("data: %o", data);
+			console.log("status: %o", status);
+			console.log("headers: %o", headers);
+			console.log("config: %o", config);
+		});
 });

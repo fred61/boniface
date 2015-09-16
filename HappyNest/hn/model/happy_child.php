@@ -1,17 +1,11 @@
 <?php
 require_once 'conf/conf.php';
 require_once 'lib/entity.php';
-require_once 'lib/log.php';
 require_once 'lib/decorator.php';
+require_once 'lib/log.php';
 
 class HappyChild  implements DecoratedObject {
 	use DecoratorTrait;
-	static $logger;
-	
-	static function init()
-	{
-		self::$logger= new Logger(__CLASS__);
-	}
 	
 	public $parent;
 
@@ -30,24 +24,25 @@ class HappyChild  implements DecoratedObject {
 		{
 			if (!isset($this->sessions[$sessionId]) && $session['days'] != "") {
 				// no sessions of this type at all yet and days are set, create new session
-				self::$logger->debug("new session: $sessionId");
+				$this->debug("new session: $sessionId");
 				$this->sessions[$sessionId]= array();
 				$this->createSession($sessionId, $session['days'], $session['validFrom']);
 			} else {
-				self::$logger->debug("update of session $sessionId");
+				$this->debug("update of session $sessionId");
 				//let's find out if all we need to do is change the days of the occurence
 				$so= $this->getCurrentOccurence($this->sessions[$sessionId], $asOf);
 				if (is_null($so)) {
 					$so= $this->getNearestFutureOccurence($this->sessions[$sessionId], $asOf);
 				}
-				self::$logger->debugDump("current occurence as of " . $asOf->format('Y-m-d'), $so);
+				$this->debug("current occurence as of " . $asOf->format('Y-m-d'));
+				$this->debug($so);
 				
 				if ($session['validFrom'] == $so->valid_from) {
-					self::$logger->debug('valid from matches, it\'s an update');
+					$this->debug('valid from matches, it\'s an update');
 					$so->weekdays= $session['days'];
 					$so->touch(); 
 				} else {
-					self::$logger->debug('valid from mismatch, so:' . $so->valid_from . "; sd: " . $session['validFrom']);
+					$this->debug('valid from mismatch, so:' . $so->valid_from . "; sd: " . $session['validFrom']);
 					$this->createSession($sessionId, $session['days'], $session['validFrom']);
 				}
 			}
@@ -149,11 +144,10 @@ class HappyChild  implements DecoratedObject {
 			$date= new DateTime($result->date_of_birth);
 			$result->date_of_birth= $date->format('Y-m-d');
 		}
-		self::$logger->debugDump("result", $result);
+		$this->debugDump("result", $result);
 		return $result;
 	}
 }
-HappyChild::init();
 
 class HappyChildDTO {
 	public $id;
@@ -168,14 +162,6 @@ class HappyChildDTO {
 class HappyChildEntityAdapter implements Entity {
 	use EntityTrait;
 
-	static $logger;
-	
-	static function init()
-	{
-		self::$logger= new Logger(__CLASS__);
-	}
-	
-		
 	public $adaptee;
 
 	function __construct($adaptee) {
@@ -185,5 +171,4 @@ class HappyChildEntityAdapter implements Entity {
 		$this->adaptee= $adaptee;
 	}
 }
-HappyChildEntityAdapter::init();
 ?>
