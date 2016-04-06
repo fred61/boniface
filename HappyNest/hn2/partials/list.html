@@ -1,0 +1,54 @@
+<!--   <div ng-controller="ListController as listController">
+ -->
+  <div>
+     <label ng-repeat="(stKey, stValue) in sessionTypes">
+      <input type="radio" name="sessionType" 
+        ng-change="changeSession()"
+        ng-model="selectedSession.type"
+        value="{{stKey}}"
+      />
+        {{ stValue.name }}
+    </label>
+  </div>
+  <div>
+    <label>
+      <input type="checkbox" ng-model="selectedSession.showHistory" ng-change="changeSession()">Show History
+      <input type="checkbox" ng-model="selectedSession.showInactive" ng-change="changeSession()">Show Inactive
+    </label>
+  </div>
+  <div>{{ selectedSessionType }}</div>
+  <table border="1">
+    <tr ng-repeat="sessionOccurence in sessionOccurences">
+      <td rowspan="{{ sessionOccurence.session.happyChild.happyParent.soCount}}" ng-if="sessionOccurence.firstParentOccurence">
+        {{ sessionOccurence.session.happyChild.happyParent.name }}
+      </td>
+      <td rowspan="{{ sessionOccurence.session.happyChild.soCount}}" ng-if="sessionOccurence.firstChildOccurence">
+        <a href="#/detail/{{sessionOccurence.session.happyChild.happyParent.index}}">
+        {{ sessionOccurence.session.happyChild.name }}
+        </a>
+      </td>
+      <td rowspan="{{ sessionOccurence.session.soCount }}" ng-if="sessionOccurence.firstOccurence">
+        {{ sessionOccurence.session.name }}
+      </td>
+      <td>
+        {{ sessionOccurence.validFrom}}
+      </td>
+      <td>
+        {{ sessionOccurence.validTo }}
+      </td>
+      <td>
+        {{ sessionOccurence.weekdays}}
+      <td>
+    </tr>
+  </table>
+  <div>
+    <button ng-click="save()">Save</button>
+  </div>
+  <div>  
+    <ul>
+      <li>dummy parent</li>
+      <li ng-repeat="parent in parents">
+        a parent: {{ parent }}
+      </li>
+    </ul>
+  </div>

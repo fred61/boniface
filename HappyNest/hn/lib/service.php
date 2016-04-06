@@ -9,18 +9,25 @@ class Service {
 	public function __construct($request, $handler)
 	{
 		$this->handler= $handler;
+		//TODO check that handler implements methods needed or stub them out  
+		
+		RootLogger::info("constructed");
 
 	}
 
 	public function handle()
 	{
+		self::info("handling");
+		
 		$result= null;
 		$status= $this->okStatus();
 		
 		try {
 			$method= $this->getMethod();
+			self::info("method is $method");
 			$result= $this->{$method}();
 		} catch (Exception $e) {
+			self::error("exception in handler method", $e);
 			$status= $this->exceptionStatus($e);
 			$result= $e;
 			//TODO that's nice but possibly pointless. I did not see this arrive on the client side. I don't think
@@ -56,10 +63,26 @@ class Service {
 		$responseData= $this->handler->get($requestData);
 		self::debugDump("", $responseData);
 		
-		return json_encode ( $responseData );
+		return $this->makeResult($responseData);
 	}
 	
-	//TODO extend for post, put and delete
+	private function post()
+	{
+		self::debug("posting it");
+		
+		$rest_json = file_get_contents("php://input");
+		$_POST = json_decode($rest_json, true);
+		
+		self::info($_POST);
+
+		$requestData= $this->_cleanInputs($_POST);
+		
+		$responseData= $this->handler->post($requestData);
+		
+		return $this->makeResult($responseData);
+	}
+	
+	//TODO extend for put and delete
 
 	private function _cleanInputs($data) {
 		$clean_input = Array ();
@@ -71,6 +94,17 @@ class Service {
 			$clean_input = trim ( strip_tags ( $data ) );
 		}
 		return $clean_input;
+	}
+	
+	private function makeResult($responseData)
+	{
+		$result= json_encode($responseData, JSON_PRETTY_PRINT);
+		
+		if (!$result) {
+			throw new Exception("JSON encoding response data failed: " . json_last_error() . "; " . json_last_error_msg());
+		} else {
+			return $result;
+		}
 	}
 	
 	private function okStatus()

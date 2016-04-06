@@ -1,7 +1,7 @@
 <?php
 require_once 'lib/log.php';
 
-class Session implements DecoratedObject {
+class Session implements DecoratedObject, JsonSerializable {
 	use DecoratorTrait;
 	
 	const PLAYGROUP = 1;
@@ -26,15 +26,23 @@ class Session implements DecoratedObject {
 			return true;
 		}
 	}
+	
+	public function jsonSerialize()
+	{
+		$a= (array)$this->unwrap();
+		
+		return $a;
+	}
 }
 
 class SessionDTO {
 	public $id;
 	public $name;
 	public $available_on;
+	public $cost;
 }
 
-class SessionOccurence implements DecoratedObject {
+class SessionOccurence implements DecoratedObject, JsonSerializable {
 	use DecoratorTrait;
 	
 	public $session;
@@ -78,6 +86,14 @@ class SessionOccurence implements DecoratedObject {
 		$this->plainObject= $dto;
 	}
 	
+	public function jsonSerialize()
+	{
+		$a= (array)$this->unwrap();
+		$a['valid_to']= $this->valid_to;
+		$a['session']= $this->session;
+		
+		return $a;
+	}
 }
 
 class SessionOccurenceDTO {

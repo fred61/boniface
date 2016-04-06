@@ -387,3 +387,96 @@ Idea: I could set the leave_date when updating sessions to none. That would keep
     
     Playing with the log4php config I note that there is also a logger hierarchy in log4php. I don't see how I could use that, since there is
     no natural structure in PHP classes like there is in Java.  
+    
+    Next aim of the game: make it so Heloise can use the parents list at least to see who's in English and who's in Music. I want to implement this
+    in an Angluar app. The plan is to implement filters for English, Music, Playgroup etc.
+    
+    In Angular, I need to use a combination of ng-repeat and filter to accomplish this.
+    But, before I get that far, I need to implement the service which provides the data. Well, technically, I could also start with mock data
+    in Angular and then eventually implement the service which provides real data.
+    
+    I do want to implement the filtering in Angular. This will give me faster filter switching, at the cost of increased memory load
+    on the client. This means no filtering requirement on the service.
+    
+    Here's a little research question: the above obviously makes little difference to my site (a couple of dozen parents at best). But
+    what do you do when you have big data, where transmitting it takes significant time? Also, is there a way to do some of the loading in
+    the background so that your site appears to load faster? Well technically the answer to that question is yes there must be, the really 
+    interesting question is obviously how do you do that?
+    
+    Another note: the parent service is also where I will have to deal with CRUD for parents.
+    
+    parent service handler was very easy. Wonder what the result looks like: http://localhost/HappyNest/hn/api/v1/parents/ should work.
+    it doesn't - my hunch is that the json encoding of my parent data structure fails. Could have something to do with the fact that the
+    structure has loops, I refer back to the parent from the child. Maybe that's not such a great idea.
+
+  23.09.15
+  
+    Trying to handle the encoding error, strangely I see 2 log entries for the exception. Need to investigate. Turns out is was a 
+    misconfiguration of log4php: you don't want appender_refs further down the hierarchy.
+    Got the exception to log also, turns out I have to add it to the pattern explicitly.
+    
+    I can solve the object graph cycle problem by using the JsonSerialize interface. I'm wondering whether to combine it with the 
+    DecoratedObject interface / trait I already have. Doing that would be a lot less work, but it seems unclean. Not only that, it's plain
+    wrong actually. E.g. on HappyParent, I do not want to just serialise the plain object, I do actually want to serialise the children
+    array.
+    
+    I got a mystery: if I implement JsonSerialize on HappyChild, the serialisation of the object graph works, but I don't see any 
+    of the HappyParent properties on the output (except ID, strangely). If I implement JsonSerialize on HappyParent, the serialisation fails.
+    It's not easy to debug, I need a much smaller DB. 
+    Dammit: If I only have 1 parent, it works. If I have 10, it doesn't. If I have 2, it does. That makes no sense.
+    
+  30.09.15
+    
+    Further investigation on the parent svc. Got it: malformed UTF8 characters. Ideally I would like to ensure that I get this data correctly
+    from the DB. Setting the option correctly on connecting did the trick once I restarted everything (DB and Apache).
+    
+    So now I want to build an Angular app using this data. In the tutorial, a certain directory structure is used. Do I copy that into my php
+    project or do I create a separate "clean" project? Not a project, no. These things need to be in the same git repo. Maybe not need to be
+    but that's how I want it. Same level as HappyNest/hn then? Why not. But names, man, names! hn2 is the best I can do in the time I want to 
+    spend on this.
+    
+    I find the markup in the code not very reliable. It sometimes show me errors (like "no module found" for the angular app) that are clearly
+    wrong. I would like to look into the tools I'm using a bit more. Another topic for that: what is Mylyn exactly? 
+    
+    Predictably I have a problem with the request URL for the parent service. I cannot use a relative URL like I did for the bookmark dates
+    in the attendance page, I'm in a different project. 
+  
+  21.10.15
+  
+    Turns out I did have a problem with the request but it wasn't what I thought it was, I screwed up the request. I still have the original
+    problem and I haven't got a good solution for it. Apparently the way configuration is done in Angular is by using the Constant provider. 
+    You'd like to have these settings in a separate file. How do you get this file into "the app"? Do you need to include it in HTML?
+    Right, so next step: have a constant for the parent service location and use it. If possible, define in its own file, if it's not possible, 
+    then I should know that that is so (as opposed to suspecting it).
+    I got the constant to work but it seems clumsy. I have to define it in one step and then list it as a dependency. Simply using a JS variable 
+    (or constant if JS has them) seems a lot easier.
+    2nd step: #include equivalent. There isn't one as such. There are preprocessors and suchlike, but no native way.
+    But maybe I can do something on the server side. Can I change a script in PHP? Not without messing with the web server config I can't. 
+    For this project that's a no-go as far as I'm concerned, I don't think I could make the required settings in production. 
+    The alternative would be to give my JS scripts a .php extension, which also goes against the grain.
+    I guess I will have to include all script files in all HTML pages - given that I should end up with only 1 layout template which routes
+    to views that's not so bad.
+    
+    So just dumping the data onto a page turns out to be very easy. Doing this, I notice that apparently the session data is not set properly
+    in my service. The "session" property is always null, and I also thought I'd done the valid-from / valid-to calculation at a lower level 
+    that the service.
+    
+    Another topic is using templates. There won't be many: one which shows the list, one which shows the details, possibly one which shows
+    the attendance table.
+    
+    1st things 1st: it's not glamorous but I gotta get the data right. Turns out SessionOccurence needed to implement JsonSerialize the same
+    way as HappyChild and HappyParent etc. The data looks good now. 
+    
+    Next step (before I do the template thing) is to get this stuff into a table. I have a familiar layout problem: I can nest children
+    into separate tables but getting the columns to line up across the whole table is difficult. I can either use fixed widths or I have
+    to flatten the table structure and use colspans, rowspan or empty cells. Neither solution appeals but that's just me being snobby.
+  
+  28.10.15
+  
+    Turns out that I almost had a page displaying the whole data structure last time, but for a typo in the final ng-repeat section. I looked
+    for a way to make it so that this could not happen, but didn't. I found a blog entry about safe-guarding the Angular scope here:
+    http://blog.jdriven.com/2012/11/using-ecmascript-5-strict-mode-to-keep-your-angularjs-scope-declaration-clean/
+    but it doesn't do what I want either. I want it so that I find an error somewhere if I make the same mistake again.
+    
+    Next topic: filter the table.
+    That's not as easy as I hoped. I am having trouble getting a predicate function defined correctly and called properly.

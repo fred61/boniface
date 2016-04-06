@@ -3,6 +3,6 @@ Options +Indexes
 <IfModule rewrite_module>
   RewriteEngine On
   RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteBase /HappyNest/hn/api/v1/bookmarkDates
+  RewriteBase /HappyNest/hn/api/v1/bookmarkDates    #remove /HappyNest prefix for production
   RewriteRule (.*)$ bookmarkDates.php?request=$1 [QSA,NC,L]
 </IfModule>

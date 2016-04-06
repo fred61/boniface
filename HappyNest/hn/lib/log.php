@@ -24,7 +24,6 @@
 		static private function info($msg, $throwable= NULL)
 		{
 			$logger= self::getLogger();
-			$logger->info("logging from logtrait");
 			$logger->info($msg, $throwable);
 		}
 		

@@ -24,9 +24,8 @@
 				$dsn= "mysql:host=" . config::$host . ";dbname=" . config::$db;
 	
 				self::$dbh= new PDO($dsn, config::$user, config::$pwd, array(
- 			   PDO::ATTR_PERSISTENT => true
+ 			   PDO::ATTR_PERSISTENT => true, PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
 				));
-	
 				if (!self::$dbh) {
 					throw new Exception("could not connect to database");
 				}
@@ -304,9 +303,14 @@
 			$sth->setFetchMode(PDO::FETCH_CLASS, "SessionOccurenceDTO");
 			$sth->execute(array_keys($children));
 			
+			self::loadAllSessions();
+			
 			foreach($sth as $dto)
 			{
 				$sessionOccurence= new SessionOccurence($dto);
+				
+				$sessionOccurence->session= self::$allSessions[$dto->session_id];
+				
 				$happyChild= $children[$dto->child_id];
 				if (!isset($happyChild->sessions[$dto->session_id])) {
 					$happyChild->sessions[$dto->session_id]= array();
@@ -355,7 +359,7 @@
 			return $result;
 		}
 		
-		private function loadAllSessions()
+		private static function loadAllSessions()
 		{
 			self::$allSessions= array();
 			

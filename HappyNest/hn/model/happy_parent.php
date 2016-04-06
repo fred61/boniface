@@ -4,7 +4,7 @@
 	require_once 'lib/log.php';
 	require_once 'lib/decorator.php';
 	
-	class HappyParent implements DecoratedObject {
+	class HappyParent implements DecoratedObject, JsonSerializable {
 		use DecoratorTrait;
 		
 		public $children= array();
@@ -17,6 +17,15 @@
 		function __toString()
 		{
 			return "HappyParent";
+		}
+		
+		public function jsonSerialize()
+		{
+			$a= (array)$this->unwrap();
+			$a['address']= "";
+			$a['children']= $this->children;
+		
+			return $a;
 		}
 		
 		static function fromRequest()

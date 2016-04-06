@@ -4,7 +4,7 @@ require_once 'lib/entity.php';
 require_once 'lib/decorator.php';
 require_once 'lib/log.php';
 
-class HappyChild  implements DecoratedObject {
+class HappyChild  implements DecoratedObject, JsonSerializable {
 	use DecoratorTrait;
 	
 	public $parent;
@@ -97,8 +97,16 @@ class HappyChild  implements DecoratedObject {
 		}
 		
 		return $result;
-			}
+	}
 	
+	public function jsonSerialize()
+	{
+		$a= (array)$this->unwrap();
+		$a['sessions']= $this->sessions;
+		
+		return $a;
+	}
+
 	private function getCurrentOccurence($sessionOccurences, $asOf)
 	{
 		$result= null;
