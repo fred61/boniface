@@ -9,7 +9,8 @@
             <level value="INFO" />
             <appender_ref ref="myAppender" />
         </root>
-        <logger name="Service">
-          <level value="DEBUG" />
+        <logger name="Service" additivity="false">
+          <level value="INFO" />
+          <appender_ref ref="myAppender" />
         </logger>
     </configuration>

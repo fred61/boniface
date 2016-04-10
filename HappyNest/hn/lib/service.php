@@ -17,7 +17,7 @@ class Service {
 
 	public function handle()
 	{
-		self::info("handling");
+		self::debug("handling");
 		
 		$result= null;
 		$status= $this->okStatus();
@@ -73,7 +73,7 @@ class Service {
 		$rest_json = file_get_contents("php://input");
 		$_POST = json_decode($rest_json, true);
 		
-		self::info($_POST);
+		self::debug($_POST);
 
 		$requestData= $this->_cleanInputs($_POST);
 		
