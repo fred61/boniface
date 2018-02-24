@@ -1,6 +1,0 @@
-spike/**
-hn/logs/*
-hn/assign_sessions.php
-hn/attendance_old.php
-hn/dump.php
-*.sql
