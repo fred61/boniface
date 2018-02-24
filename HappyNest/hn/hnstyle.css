@@ -1,0 +1,199 @@
+/*
+  quick reminder: # selects by ID, . selects by class
+*/
+  
+body
+{
+	font-size:75%;
+	font-family:verdana,arial,'sans serif';
+	margin:70px;
+}
+
+.header2 
+{
+	font-weight: bold;
+	font-size: 150%;
+	padding: 10px 0;
+}
+
+textarea
+{
+  font-size:inherit;
+	font-family:verdana,arial,'sans serif';
+}
+
+label
+{
+	width: 50mm;
+}
+
+table#attendance
+{
+	border: 2px solid black;
+	width:  80%;
+}
+
+table#attendance th
+{
+	padding-bottom: 5mm;
+	border: 2px solid black;
+}
+
+table#attendance td
+{
+	border: 1px solid black;
+	text-align: center;
+}
+
+table#attendance td.playgroup
+{
+	background-color: #0099FF;
+}
+
+table#attendance td.english_beginner
+{
+  background-color: #FFFF33;
+}
+
+table#attendance td.english_intermediate
+{
+  background-color: #FFCC33;
+}
+
+table#attendance td.english_advanced
+{
+  background-color: #FFAA33;
+}
+
+table#attendance td.music
+{
+  background-color: #FF8833
+}
+
+table#attendance td.waiting_list
+{
+  background-color: #FFFF99;
+}
+
+table#attendance a
+{
+	color : black;
+}
+
+/*
+  the aim of the parent table formatting is to have the header be fixed
+  and the body be scrollable, so that I can have UI elements both above and
+  below.
+  
+  turns out this is not easy: you have to change the display property of the
+  body to block. This decouples the header from the body, which means you have to 
+  give all the columns fixed widths.
+  
+  the final piece of styling concerns the email links: these need special care and
+  attention, otherwise they make their column wider than you want or spill over to 
+  the next column.
+*/
+  
+table#parents
+{
+	border: 1px solid black;
+  font-size:90%;
+  font-family:verdana,arial,'sans serif';
+}
+
+table#parents thead tr
+{
+	display: block;
+}
+
+table#parents th
+{
+  border: 1px solid black;
+}
+
+table#parents tbody
+{
+	display: block;
+  overflow-y: scroll;
+  height: 50vh;
+}
+
+table#parents td
+{
+	border: 1px solid black;
+}
+
+table#parents td a
+{
+	display:block;
+	overflow-x: hidden;
+}
+
+table#parents .child {
+	width: 20mm;
+}
+
+table#parents .name {
+	width: 60mm;
+}
+
+table#parents .email {
+	width: 60mm;
+	max-width: 60mm;
+}
+
+table#parents .phone {
+	width: 25mm;
+}
+
+table.edit_children td.padded 
+{
+	padding-left: 3mm;
+}
+
+table.edit_children th
+{
+	font-weight: normal;
+}
+
+
+nav#calendar
+{
+	font-family:verdana,arial,'sans serif';
+	float:right;
+}
+
+nav#calendar table
+{
+	border: 1px solid black;
+	width: 100%;
+	font-size: 80%;
+}
+
+nav#calendar a
+{
+	text-decoration: none;
+	color: black;
+}
+
+nav#calendar td
+{
+	border: 1px solid white;
+	text-align: center;
+}
+
+nav#calendar td.clickable
+{
+  cursor: pointer;
+}
+
+nav#calendar td.todayDateCell
+{
+  border: 1px solid red;
+}
+
+nav#calendar td.asOfDateCell
+{
+  border: 1px solid black;
+}
+
